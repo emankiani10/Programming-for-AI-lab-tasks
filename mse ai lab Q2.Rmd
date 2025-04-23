@@ -1,0 +1,67 @@
+---
+title: "MID_Q02"
+author: "Eman Asghar"
+date: "2025-04-23"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+# Load libraries
+library(dplyr)
+library(ggplot2)
+library(caret)
+```
+
+##part 1
+```{r}
+filtered_data <- mtcars %>%
+  filter(mpg > 20) %>%
+  arrange(desc(hp))
+
+print(filtered_data)
+```
+
+## part 2
+```{r}
+ggplot(mtcars, aes(x = wt, y = mpg)) +
+  geom_point(color = "blue") +
+  geom_smooth(method = "lm", se = FALSE, color = "red") +
+  labs(title = "MPG vs Weight",
+       x = "Weight (1000 lbs)",
+       y = "Miles Per Gallon")
+
+```
+
+## part 3
+```{r}
+sample_data <- c(9, 10, 12, 8, 11)
+t_result <- t.test(sample_data, mu = 10)
+print(t_result)
+```
+
+## part 4
+```{r}
+set.seed(123)
+
+# Split data
+split_index <- createDataPartition(mtcars$mpg, p = 0.8, list = FALSE)
+train_data <- mtcars[split_index, ]
+test_data <- mtcars[-split_index, ]
+
+# Preprocess data
+pre_proc <- preProcess(train_data, method = c("center", "scale"))
+train_scaled <- predict(pre_proc, train_data)
+test_scaled <- predict(pre_proc, test_data)
+
+# Train linear regression model
+model <- train(mpg ~ ., data = train_scaled, method = "lm")
+
+# Predict and evaluate
+predictions <- predict(model, test_scaled)
+rmse <- RMSE(predictions, test_scaled$mpg)
+
+print(paste("RMSE:", rmse))
+
+```
+
