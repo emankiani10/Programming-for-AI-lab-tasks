@@ -1,0 +1,29 @@
+---
+title: "R Assignment - Q No 2"
+author: "Eman Asghar"
+date: "`r Sys.Date()`"
+output: html_document
+---
+
+```{r, include=FALSE}
+# Load necessary libraries
+
+library(dplyr)
+library(ggplot2)
+library(caret)
+
+'''{r}
+# Filter rows where mpg > 20 and arrange by hp (descending)
+filtered_data <- mtcars %>%
+  filter(mpg > 20) %>%
+  arrange(desc(hp))
+
+# Print the result
+print(filtered_data)
+
+# Show result
+```
+
+
+```{r setup, include=FALSE}
+filtered_data
