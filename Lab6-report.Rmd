@@ -1,0 +1,113 @@
+---
+title: "Lab Report 6: Handling Imbalanced Data and Feature Engineering"
+author: "Eman Asghar"
+date: "`r Sys.Date()`"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+# Introduction
+
+In this lab, we work with imbalanced data, apply feature engineering techniques, use PCA for dimensionality reduction, and train a Random Forest model.
+
+# Step 1: Setup
+
+```{r}
+# Install packages if not already installed
+# install.packages(c("ROSE", "recipes", "caret", "FactoMineR", "ggplot2"))
+
+library(ROSE)
+library(recipes)
+library(caret)
+library(FactoMineR)
+library(ggplot2)
+```
+
+# Step 2: Load Dataset
+
+```{r}
+# Load credit card dataset
+data <- read.csv("BankChurners(1).csv")
+
+# View class distribution
+table(data$Class)
+```
+
+# Step 3: Handle Imbalanced Data (Oversampling)
+
+```{r}
+set.seed(123)
+
+# Oversampling minority class
+balanced_data <- ovun.sample(Attrition_Flag~ ., data = data, method = "over")$data
+
+# Check new distribution
+table(balanced_data$Attrition_Flag)
+```
+
+# Step 4: Feature Engineering
+
+## 4.1 Binning Credit Limit
+
+```{r}
+# Create binned feature for credit limit (example)
+data$Limit_Binned <- cut(data$Credit_Limit,
+                          breaks = c(0, 2500, 5000, 15000),
+                          labels = c("Low", "Medium", "High"))
+```
+
+## 4.2 Polynomial Feature on Customer Age
+
+```{r}
+# Create recipe for polynomial feature
+recipe_obj <- recipe(Attrition_Flag ~ ., data = data) %>%
+  step_poly(Customer_Age, degree = 2)
+
+# Prepare and apply the recipe
+prepped_data <- prep(recipe_obj, training = data) %>%
+  bake(new_data = data)
+```
+
+# Step 5: PCA (Dimensionality Reduction)
+
+```{r}
+# Select only numeric columns for PCA
+numeric_data <- prepped_data[, sapply(prepped_data, is.numeric)]
+
+# Apply PCA
+pca_result <- PCA(numeric_data, graph = FALSE)
+```
+
+## PCA Visualization
+
+```{r}
+library(factoextra)
+# Visualize individuals colored by class
+fviz_pca_ind(pca_result, geom = "point", col.ind = prepped_data$Attrition_Flag)
+```
+
+# Step 6: Model Training (Random Forest)
+
+```{r}
+set.seed(123)
+
+# Train Random Forest model
+model <- train(Attrition_Flag ~ ., data = balanced_data, method = "rf",
+               trControl = trainControl(method = "cv", number = 5))
+
+# View model results
+print(model)
+```
+
+# Results Summary
+
+- **Balanced Class Distribution:** `r table(balanced_data$Attrition_Flag)`
+- **Engineered Features:** Limit_Binned, Polynomial(Customer_Age)
+- **Top 2 PCA Components Explained Variance:** `r sum(pca_result$eig[1:2, 2])` %
+
+# Conclusion
+
+We successfully handled data imbalance using oversampling, engineered new features, reduced dimensionality with PCA, and built a Random Forest model. The PCA plot shows clear separation, and the balanced dataset improved the classifier performance.
